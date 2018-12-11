@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>My Sketch</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/processing.js/1.6.6/processing.min.js"></script>
+	</head>
+	<body>
+		<script type="application/processing">
+int gameover=0;
+ 
+int fruitN=1;//果實N,聽說N會越來越大
+int eggN=1;//蛋的數量/蛋的存活時間
+int [] eggMap = new int[50*50];
+ 
+int headX=25,headY=25;
+int dir=0;//direction方向
+int [] dirX={1,0,-1,0};//這兩行很有學問,這技巧要用下面的四個方向來理解
+int [] dirY={0,1,0,-1};//用陣列來表示頭移動的方向,所以...
+// (dirX[0],dirY[0])表示往右(1,0)
+// (dirX[1],dirY[1])表示往下(0,1)
+// (dirX[2],dirY[2])表示往右(-1,0)
+// (dirX[3],dirY[3])表示往上(0,-1)
+void setup(){
+  size(500,500);
+  frameRate(5);
+  for(int i=0;i<50*50;i++){
+    eggMap[i]=0;//0表示沒有蛋,有數字表示有蛋
+  }
+  createNextFruit();
+}
+void draw(){
+  background(204);
+  if(gameover==1){
+    background(255);
+  }else{
+    update();
+  }
+}
+void update(){
+  headX=headX+dirX[dir];//headX=headX+1;
+  headY=headY+dirY[dir];//headY=headY+0;
+ 
+  if( headX<0 || headX>50 || headY<0 || headY>50){
+    gameover=1;
+    return ;
+  }
+  if( eggMap[headX+headY*50]>0){ //這裡條件改了，大於0才是身體，撞到才會gameover
+    gameover=1;
+    return ;
+  }
+ 
+  if( eggMap[headX+headY*50]==-1){ //吃到橡膠惡魔果實，就會變長
+    eggN+=fruitN;
+    fruitN++;
+    eggMap[headX+headY*50]=0;
+    createNextFruit();
+  }
+ 
+  eggMap[headX+headY*50]=eggN;
+  for(int i=0;i<50*50;i++){
+    if(eggMap[i]==-1){ //-1表示果實(fruit),英文聲音聽起來很像
+      int nowX=i%50;
+      int nowY=i/50;
+      fill(255,0,0);
+      rect( nowX*10, nowY*10, 9,9);
+      fill(255);
+    }else if(eggMap[i]!=0){ //如果有蛋，就畫出來
+      eggMap[i]=eggMap[i]-1;//如果有蛋，蛋就短命一格
+      //這裡的換算比較難理解，是用1D陣列來模擬2D陣列,使用餘數(%)得nowX,除法(/)得nowY
+      int nowX=i%50;
+      int nowY=i/50;
+      rect( nowX*10, nowY*10, 9,9);
+    }
+  }
+}
+//重點是要會產生新的果實，也就是 createNextFruit()函式
+void createNextFruit(){
+  int nowEmpty=0;
+  for(int i=0;i<50*50;i++){ //,裡面的計算就是，先數有幾個空格
+    if(eggMap[i]==0){
+      nowEmpty++;
+    }
+  }
+  int r=int(random(nowEmpty)); //用亂數說第幾個空格要放果實
+  for(int i=0;i<50*50;i++){
+    if(eggMap[i]==0){ //空白，表示有機會生出新果實
+      r--; //然後重數一次，數到就放。
+      if(r<=0){
+        eggMap[i]=-1;
+        break;
+      }
+    }
+  }
+}
+void keyPressed()
+{
+  if(keyCode==RIGHT){
+    dir=0;
+  }else if(keyCode==DOWN){
+    dir=1;
+  }else if(keyCode==LEFT){
+    dir=2;
+  }else if(keyCode==UP){
+    dir=3;
+  }
+  if(key=='l' || key=='L'){
+    eggN+=fruitN;//按'L'鍵，就讓蛋的數量加1
+    fruitN++;
+  }
+}
+		</script>
+		<canvas> </canvas>
+	</body>
+</html>
